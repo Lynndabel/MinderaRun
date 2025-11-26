@@ -8,6 +8,8 @@ export function SimpleGameCanvas() {
   const { playSound } = useGameSounds();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+  const dprRef = useRef<number>(1);
   const collisionUpdatesRef = useRef<{coins: number, score: number}>({coins: 0, score: 0});
   const gameEndRef = useRef<{shouldEnd: boolean, finalScore: number, stageCompleted: boolean}>({shouldEnd: false, finalScore: 0, stageCompleted: false});
   const [gameState, setGameState] = useState({
@@ -262,6 +264,32 @@ export function SimpleGameCanvas() {
       currentCheckpoint: 0
     }));
 
+    // Setup DPR for crisp canvas rendering
+    const setupDPR = () => {
+      const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+      dprRef.current = dpr;
+      // Backing store size scaled by DPR, logical drawing remains 800x600
+      canvas.width = 800 * dpr;
+      canvas.height = 600 * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // Keep smoothing off for pixel art
+      ctx.imageSmoothingEnabled = false;
+    };
+
+    setupDPR();
+
+    // Handle window resize / DPR changes (debounced)
+    let resizeTimer: number | null = null;
+    const handleResize = () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        setupDPR();
+        // Re-render once after resize
+        initialRender();
+      }, 150);
+    };
+    window.addEventListener('resize', handleResize);
+
     // Initial render function - shows game even when not playing
     const initialRender = () => {
       if (!ctx) return;
@@ -428,16 +456,22 @@ export function SimpleGameCanvas() {
     };
 
     // Single game loop that handles both updates and rendering
-    const gameLoop = () => {
+    const gameLoop = (time: number) => {
       if (!ctx || !isPlaying || isGameOver) return;
 
       // Update game state and render in one go
       setGameState(prev => {
         const newState = { ...prev };
 
+        // Frame delta factor (1 ~= 60fps)
+        const last = lastTimeRef.current ?? time;
+        const deltaMs = time - last;
+        lastTimeRef.current = time;
+        const factor = Math.min(2, Math.max(0.5, deltaMs / 16.6667));
+
         // Apply gravity
-        newState.playerVelocityY += 0.6;
-        newState.playerY += newState.playerVelocityY;
+        newState.playerVelocityY += 0.6 * factor;
+        newState.playerY += newState.playerVelocityY * factor;
 
         // Ground collision - fix ground level to match visible grass surface
         if (newState.playerY >= 350) {
@@ -452,23 +486,23 @@ export function SimpleGameCanvas() {
         // Move all objects (this creates the running effect)
         newState.coins = newState.coins.map(coin => ({
           ...coin,
-          x: coin.x - newState.gameSpeed,
+          x: coin.x - newState.gameSpeed * factor,
           y: coin.y + Math.sin(coin.x * 0.01) * 0.5
         })).filter(coin => coin.x > -50);
 
         newState.obstacles = newState.obstacles.map(obstacle => ({
           ...obstacle,
-          x: obstacle.x - newState.gameSpeed
+          x: obstacle.x - newState.gameSpeed * factor
         })).filter(obstacle => obstacle.x > -50);
 
         newState.knowledgeWalls = newState.knowledgeWalls.map(wall => ({
           ...wall,
-          x: wall.x - newState.gameSpeed
+          x: wall.x - newState.gameSpeed * factor
         })).filter(wall => wall.x > -100);
 
         // Update stage progress
-        newState.stageProgress += newState.gameSpeed;
-        newState.gameTime += 1;
+        newState.stageProgress += newState.gameSpeed * factor;
+        newState.gameTime += factor;
 
         // Draw frame with new state
         drawFrame(newState);
@@ -929,13 +963,15 @@ export function SimpleGameCanvas() {
     initialRender();
 
     if (isPlaying) {
-      gameLoop();
+      lastTimeRef.current = null;
+      animationRef.current = requestAnimationFrame(gameLoop);
     }
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
+      window.removeEventListener('resize', handleResize);
     };
   }, [isPlaying, currentStage, updateScore, updateSessionCoins, setShowQuiz, setCurrentQuestion, setPlaying]);
 
