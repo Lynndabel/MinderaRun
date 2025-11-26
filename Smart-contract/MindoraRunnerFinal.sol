@@ -40,8 +40,11 @@ contract MindoraRunnerFinal {
     mapping(address => Player) public players;
     mapping(uint256 => GameSession[]) public stageLeaderboards;  // stage => sessions
     mapping(address => mapping(uint256 => bool)) public stageCompleted;
+<<<<<<< HEAD
+=======
     mapping(address => mapping(uint256 => bool)) public tokensClaimed;  // Track if player claimed HTS tokens for stage
     mapping(address => mapping(uint256 => bool)) public nftClaimed;     // Track if player claimed NFT badge for stage
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
 
     // ============ EVENTS ============
 
@@ -49,8 +52,11 @@ contract MindoraRunnerFinal {
     event GameSessionSaved(address indexed player, uint256 stage, uint256 score, uint256 coinsCollected, bool completed);
     event StageCompleted(address indexed player, uint256 stage, uint256 questTokensEarned);
     event ItemPurchased(address indexed player, string itemType, uint256 cost);
+<<<<<<< HEAD
+=======
     event TokensClaimed(address indexed player, uint256 stage, uint256 tokenAmount);
     event NFTClaimed(address indexed player, uint256 stage, string badgeName);
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
 
     // ============ BASIC MODIFIERS ============
 
@@ -93,6 +99,9 @@ contract MindoraRunnerFinal {
     ) external onlyRegistered {
 
         Player storage player = players[msg.sender];
+<<<<<<< HEAD
+        require(_stage <= player.currentStage, "Stage locked");
+=======
         
         // Allow saving if:
         // 1. Stage is <= currentStage (normal sequential progression), OR
@@ -103,6 +112,7 @@ contract MindoraRunnerFinal {
             (_stage == player.currentStage + 1 && _stageCompleted && stageCompleted[msg.sender][_stage - 1]),
             "Stage locked"
         );
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
 
         // Always save coins and update stats
         player.inGameCoins += _coinsCollected;
@@ -133,6 +143,11 @@ contract MindoraRunnerFinal {
             uint256 tokensToEarn = _getStageTokenReward(_stage);
             player.questTokensEarned += tokensToEarn;
 
+<<<<<<< HEAD
+            // Unlock next stage
+            if (_stage == player.currentStage && _stage < 3) {
+                player.currentStage++;
+=======
             // Unlock next stage when completing any stage that matches or exceeds current stage
             // This allows:
             // - Sequential progression: complete stage 1 → unlock 2, complete stage 2 → unlock 3
@@ -140,10 +155,16 @@ contract MindoraRunnerFinal {
             if (_stage >= player.currentStage && _stage < 3) {
                 // Set currentStage to completed stage + 1 to unlock next stage
                 player.currentStage = _stage + 1;
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
             }
 
             emit StageCompleted(msg.sender, _stage, tokensToEarn);
         }
+<<<<<<< HEAD
+
+        totalGamesPlayed++;
+=======
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
         emit GameSessionSaved(msg.sender, _stage, _finalScore, _coinsCollected, _stageCompleted);
     }
 
@@ -183,6 +204,8 @@ contract MindoraRunnerFinal {
         return stageCompleted[_player][_stage];
     }
 
+<<<<<<< HEAD
+=======
     function areTokensClaimed(address _player, uint256 _stage) external view returns (bool) {
         return tokensClaimed[_player][_stage];
     }
@@ -253,6 +276,7 @@ contract MindoraRunnerFinal {
         return result;
     }
 
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
     function getGameStats() external view returns (uint256, uint256) {
         return (totalPlayers, totalGamesPlayed);
     }
@@ -265,6 +289,8 @@ contract MindoraRunnerFinal {
         if (_stage == 3) return 100;
         return 0;
     }
+<<<<<<< HEAD
+=======
 
     function _getStageBadgeName(uint256 _stage) internal pure returns (string memory) {
         if (_stage == 1) return "Explorer Badge";
@@ -272,4 +298,5 @@ contract MindoraRunnerFinal {
         if (_stage == 3) return "Master Badge";
         return "Unknown Badge";
     }
+>>>>>>> 335fef4c996f6001c0ea4bc9fb9f487eeda53ed8
 }

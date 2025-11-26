@@ -8,11 +8,15 @@ const {
 } = require("@hashgraph/sdk");
 const fs = require("fs");
 const path = require("path");
-
-// Load environment variables ONLY from scripts/.env
 const dotenv = require("dotenv");
+
+// Prefer scripts/.env; fallback to default .env if scripts/.env not present
 const scriptsEnvPath = path.join(__dirname, ".env");
-dotenv.config({ path: scriptsEnvPath });
+if (fs.existsSync(scriptsEnvPath)) {
+  dotenv.config({ path: scriptsEnvPath });
+} else {
+  dotenv.config();
+}
 
 // Your account details from environment variables
 const operatorId = process.env.HEDERA_OPERATOR_ID;
@@ -20,9 +24,10 @@ const operatorKeyRaw = process.env.HEDERA_OPERATOR_KEY;
 
 if (!operatorId || !operatorKeyRaw) {
   console.error(
-    "❌ Missing environment variables. Please create scripts/.env with:\n" +
+    "❌ Missing environment variables. Please set:\n" +
       "HEDERA_OPERATOR_ID=0.0.YOUR_ACCOUNT\n" +
-      "HEDERA_OPERATOR_KEY=YOUR_PRIVATE_KEY"
+      "HEDERA_OPERATOR_KEY=YOUR_PRIVATE_KEY\n" +
+      "You can place them in scripts/.env or project .env"
   );
   process.exit(1);
 }
@@ -80,7 +85,7 @@ async function createTokens() {
     console.log(`✅ Badge NFT created: ${badgeNFTId}`);
     console.log(`🔗 View on Hashscan: https://hashscan.io/testnet/token/${badgeNFTId}`);
 
-    // STEP 3: Update environment file
+    // STEP 3: Update environment file (opt-in)
     if (process.env.WRITE_FRONTEND_ENV === 'true') {
       console.log("📝 Updating frontend .env.local with token IDs (opt-in)...");
       const candidateEnvPaths = [
