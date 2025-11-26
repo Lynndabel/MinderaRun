@@ -166,13 +166,16 @@ export const usePlayerData = (playerAddress?: string) => {
   };
 };
 
-// Hook for reading leaderboard data
-export const useLeaderboard = (stage: number, limit: number = 10) => {
+// Hook for reading leaderboard data (with pagination plumbing)
+export const useLeaderboard = (stage: number, limit: number = 10, page: number = 1) => {
+  // Until the contract supports offset, fetch a larger window when requesting deeper pages
+  const windowLimit = Math.max(1, Math.min(200, Number(limit) * Math.max(1, Number(page))));
+
   const { data, isLoading, error, refetch } = useReadContract({
     address: contracts.MINDORA_RUNNER,
     abi: MindoraRunnerABI,
     functionName: 'getStageLeaderboard',
-    args: [BigInt(stage), BigInt(limit)],
+    args: [BigInt(stage), BigInt(windowLimit)],
   });
 
   // Transform leaderboard data
@@ -199,7 +202,18 @@ export const useLeaderboard = (stage: number, limit: number = 10) => {
   console.log('🔍 useLeaderboard - Final leaderboard:', leaderboard);
 
   return {
+    // Full list for backward compatibility with current UI (which does client-side sorting/slicing)
     leaderboard,
+    // Pagination plumbing metadata for future server-side pagination
+    page,
+    pageSize: limit,
+    total: leaderboard.length,
+    // Convenience: current page slice
+    pageData: (() => {
+      const start = (Math.max(1, Number(page)) - 1) * Number(limit);
+      const end = start + Number(limit);
+      return leaderboard.slice(start, end).map((e, idx) => ({ ...e, rank: start + idx + 1 }));
+    })(),
     isLoading,
     error,
     refetch,

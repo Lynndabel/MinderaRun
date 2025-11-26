@@ -37,9 +37,9 @@ export function Leaderboard() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Fetch real leaderboard data from contract (request a bigger window and paginate client-side)
+  // Fetch real leaderboard data from contract (request a window sized by page/pageSize; still paginate client-side)
   const stageForBoard = player?.currentStage || currentStage || 1;
-  const { leaderboard: rawBoard, isLoading, error, refetch } = useContractLeaderboard(stageForBoard, 100);
+  const { leaderboard: rawBoard, isLoading, error, refetch } = useContractLeaderboard(stageForBoard, Math.max(10, pageSize), page);
 
   useEffect(() => {
     // Transform contract data into UI model with sensible defaults for missing fields
