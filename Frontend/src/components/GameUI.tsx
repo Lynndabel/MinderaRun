@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useGameStore, LeaderboardEntry } from '@/store/gameStore';
 import { Play, Pause, RotateCcw, Trophy, Coins, Medal, Users, Volume2, VolumeX } from 'lucide-react';
 import { useGameSounds } from '@/hooks/useGameSounds';
@@ -13,11 +14,13 @@ export function GameUI() {
   const { playSound, toggleMute, isMuted, masterVolume, setVolume } = useGameSounds();
   const {
     isPlaying,
+    isPaused,
     score,
     sessionCoins,
     player,
     currentStage,
     setPlaying,
+    setPaused,
     isSavingSession,
     loadLeaderboard,
     contractCallbacks
@@ -215,6 +218,14 @@ export function GameUI() {
         >
           {isMuted ? <VolumeX size={16} className="sm:w-5 sm:h-5" /> : <Volume2 size={16} className="sm:w-5 sm:h-5" />}
         </button>
+        {/* Pause */}
+        <button
+          onClick={() => { playSound('button'); setPaused(true); setPlaying(false); }}
+          className="nes-btn pixel-font pointer-events-auto text-xs sm:text-base"
+          title="Pause"
+        >
+          PAUSE
+        </button>
         
         <button
           onClick={() => { playSound('button'); setShowNFTs(true); }}
@@ -233,6 +244,49 @@ export function GameUI() {
             <p className="pixel-font text-gray-300 text-sm">Your coins and score are being saved permanently!</p>
             <div className="mt-4">
               <div className="animate-pulse pixel-font text-white">🔗 ⛓️ 🔗</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pause/Settings Overlay */}
+      {isPaused && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 pointer-events-auto">
+          <div className="nes-container with-title pixel-art max-w-sm w-full mx-4" style={{ backgroundColor: 'white' }}>
+            <p className="title pixel-font">PAUSED</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="pixel-font text-sm">Sound</span>
+                <button
+                  onClick={() => { playSound('button'); toggleMute(); }}
+                  className="nes-btn pixel-font text-xs"
+                >
+                  {isMuted ? 'Unmute' : 'Mute'}
+                </button>
+              </div>
+              <div>
+                <label className="pixel-font text-xs block mb-1">Volume</label>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={masterVolume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { playSound('button'); setPaused(false); setPlaying(true); }}
+                  className="nes-btn is-success pixel-font flex-1 text-xs"
+                >
+                  RESUME
+                </button>
+                <Link href="/how-to-play" className="nes-btn pixel-font flex-1 text-xs text-center">
+                  HOW TO PLAY
+                </Link>
+              </div>
             </div>
           </div>
         </div>
