@@ -127,6 +127,14 @@ export function Leaderboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+        Failed to load leaderboard. Please try again.
+      </div>
+    );
+  }
+
   const getSortedLeaderboard = () => {
     return [...leaderboard].sort((a, b) => {
       switch (leaderboardType) {
@@ -307,6 +315,13 @@ export function Leaderboard() {
       <div className="space-y-2">
         {(() => {
           const sorted = getSortedLeaderboard();
+          if (sorted.length === 0) {
+            return (
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-700">
+                No leaderboard entries yet. Play a game to be the first!
+              </div>
+            );
+          }
           const start = (page - 1) * pageSize;
           const end = start + pageSize;
           const pageData = sorted.slice(start, end);
@@ -314,7 +329,7 @@ export function Leaderboard() {
           <div
             key={entry.walletAddress}
             className={`flex items-center p-4 rounded-lg transition-all hover:scale-102 ${getRankColor(entry.rank)} ${
-              entry.walletAddress === walletAddress ? 'ring-2 ring-blue-400' : ''
+              (entry.walletAddress || '').toLowerCase() === (walletAddress || '').toLowerCase() ? 'ring-2 ring-blue-400' : ''
             }`}
           >
             <div className="flex items-center space-x-3 flex-1">

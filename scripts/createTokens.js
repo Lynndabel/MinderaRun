@@ -6,8 +6,8 @@ const {
   Hbar,
   PrivateKey
 } = require("@hashgraph/sdk");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const dotenv = require("dotenv");
 
 // Prefer scripts/.env; fallback to default .env if scripts/.env not present
@@ -103,8 +103,10 @@ async function createTokens() {
             !l.startsWith("NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=") &&
             !l.startsWith("NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=")
         );
-        filtered.push(`NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=${questCoinId}`);
-        filtered.push(`NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=${badgeNFTId}`);
+        filtered.push(
+          `NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=${questCoinId}`,
+          `NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=${badgeNFTId}`
+        );
         const newContent = filtered.join("\n") + "\n";
         fs.writeFileSync(targetEnvPath, newContent);
         console.log("✅ Frontend env updated at:", targetEnvPath);
