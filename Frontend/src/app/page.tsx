@@ -61,8 +61,8 @@ export default function Home() {
 
       {/* Leaderboard Modal */}
       {showLeaderboard && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="nes-container with-title is-centered pixel-art w-full max-w-2xl relative" style={{ backgroundColor: 'white' }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="nes-container with-title is-centered pixel-art w-full max-w-2xl mx-2 sm:mx-4 relative max-h-[90vh] overflow-y-auto p-3 sm:p-4" style={{ backgroundColor: 'white' }}>
             <p className="title pixel-font text-primary">LEADERBOARD</p>
             <button
               onClick={() => setShowLeaderboard(false)}
