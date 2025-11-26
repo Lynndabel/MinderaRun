@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Trophy, Medal, Award, Crown, Star, Users, Zap } from 'lucide-react';
 import { useGameStore } from '@/store/gameStore';
+import { useLeaderboard as useContractLeaderboard } from '@/hooks/useMindoraRunner';
 
 interface LeaderboardEntry {
   rank: number;
@@ -28,28 +29,37 @@ interface Tournament {
 }
 
 export function Leaderboard() {
-  const { player, walletAddress } = useGameStore();
+  const { player, walletAddress, currentStage } = useGameStore();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'all'>('all');
   const [leaderboardType, setLeaderboardType] = useState<'score' | 'tokens' | 'speed'>('score');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Fetch real leaderboard data from contract (request a bigger window and paginate client-side)
+  const stageForBoard = player?.currentStage || currentStage || 1;
+  const { leaderboard: rawBoard, isLoading, error, refetch } = useContractLeaderboard(stageForBoard, 100);
 
   useEffect(() => {
-    // Simulate fetching leaderboard data
-    const mockData: LeaderboardEntry[] = [
-      { rank: 1, player: 'CryptoRunner', walletAddress: '0.0.123456', score: 15420, stage: 5, tokens: 2500, nfts: 8, completionTime: 145, streakDays: 12, totalGamesPlayed: 45 },
-      { rank: 2, player: 'BlockchainGamer', walletAddress: '0.0.123457', score: 14280, stage: 4, tokens: 2200, nfts: 6, completionTime: 178, streakDays: 8, totalGamesPlayed: 38 },
-      { rank: 3, player: 'HederaHero', walletAddress: '0.0.123458', score: 13850, stage: 4, tokens: 2100, nfts: 5, completionTime: 189, streakDays: 15, totalGamesPlayed: 42 },
-      { rank: 4, player: 'MindoraMaster', walletAddress: '0.0.123459', score: 12500, stage: 3, tokens: 1800, nfts: 4, completionTime: 205, streakDays: 5, totalGamesPlayed: 32 },
-      { rank: 5, player: 'QuizChampion', walletAddress: '0.0.123460', score: 11800, stage: 3, tokens: 1600, nfts: 3, completionTime: 198, streakDays: 20, totalGamesPlayed: 55 },
-      { rank: 6, player: 'TokenCollector', walletAddress: '0.0.123461', score: 11200, stage: 3, tokens: 1500, nfts: 3, completionTime: 234, streakDays: 3, totalGamesPlayed: 28 },
-      { rank: 7, player: 'NFTHunter', walletAddress: '0.0.123462', score: 10800, stage: 2, tokens: 1400, nfts: 2, completionTime: 289, streakDays: 7, totalGamesPlayed: 25 },
-      { rank: 8, player: 'GameFiGuru', walletAddress: '0.0.123463', score: 10200, stage: 2, tokens: 1300, nfts: 2, completionTime: 312, streakDays: 4, totalGamesPlayed: 30 },
-      { rank: 9, player: 'EduGamer', walletAddress: '0.0.123464', score: 9800, stage: 2, tokens: 1200, nfts: 2, completionTime: 298, streakDays: 11, totalGamesPlayed: 35 },
-      { rank: 10, player: 'LearningLegend', walletAddress: '0.0.123465', score: 9200, stage: 2, tokens: 1100, nfts: 1, completionTime: 356, streakDays: 1, totalGamesPlayed: 18 },
-    ];
+    // Transform contract data into UI model with sensible defaults for missing fields
+    const transformed: LeaderboardEntry[] = (rawBoard || []).map((e: any, idx: number) => ({
+      rank: idx + 1,
+      player: e.player?.slice(0, 10) || 'Player',
+      walletAddress: e.player || 'unknown',
+      score: Number(e.score || 0),
+      stage: Number(e.stage || 0),
+      tokens: 0,
+      nfts: 0,
+      completionTime: undefined,
+      streakDays: 0,
+      totalGamesPlayed: 0,
+    }));
+    setLeaderboard(transformed);
+  }, [rawBoard]);
 
+  // Mock tournaments (kept for UI richness)
+  useEffect(() => {
     const mockTournaments: Tournament[] = [
       {
         id: 'weekly-challenge',
@@ -79,13 +89,8 @@ export function Leaderboard() {
         status: 'completed'
       }
     ];
-
-    setTimeout(() => {
-      setLeaderboard(mockData);
-      setTournaments(mockTournaments);
-      setLoading(false);
-    }, 1000);
-  }, [timeframe, leaderboardType]);
+    setTournaments(mockTournaments);
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -113,7 +118,7 @@ export function Leaderboard() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -262,11 +267,50 @@ export function Leaderboard() {
             <span>Speed</span>
           </button>
         </div>
+
+        {/* Pagination Controls */}
+        <div className="ml-auto flex items-center gap-2">
+          <label className="text-sm text-gray-600">Rows:</label>
+          <select
+            className="px-2 py-1 rounded border bg-white text-sm"
+            value={pageSize}
+            onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }}
+          >
+            {[5, 10, 20, 50].map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-700">
+            Page {page} of {Math.max(1, Math.ceil(getSortedLeaderboard().length / pageSize))}
+          </span>
+          <button
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+            onClick={() => setPage((p) => {
+              const total = Math.ceil(getSortedLeaderboard().length / pageSize);
+              return Math.min(total || 1, p + 1);
+            })}
+            disabled={page >= Math.ceil(getSortedLeaderboard().length / pageSize)}
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {/* Leaderboard */}
       <div className="space-y-2">
-        {getSortedLeaderboard().map((entry) => (
+        {(() => {
+          const sorted = getSortedLeaderboard();
+          const start = (page - 1) * pageSize;
+          const end = start + pageSize;
+          const pageData = sorted.slice(start, end);
+          return pageData.map((entry) => (
           <div
             key={entry.walletAddress}
             className={`flex items-center p-4 rounded-lg transition-all hover:scale-102 ${getRankColor(entry.rank)} ${
@@ -301,7 +345,8 @@ export function Leaderboard() {
               </div>
             </div>
           </div>
-        ))}
+          ));
+        })()}
       </div>
 
       {/* Your Rank */}
