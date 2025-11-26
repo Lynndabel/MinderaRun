@@ -464,7 +464,7 @@ export function SimpleGameCanvas() {
         const newState = { ...prev };
 
         // Frame delta factor (1 ~= 60fps)
-        const last = lastTimeRef.current ?? time;
+        const last = lastTimeRef.current ?? (time - 16.6667);
         const deltaMs = time - last;
         lastTimeRef.current = time;
         const factor = Math.min(2, Math.max(0.5, deltaMs / 16.6667));
