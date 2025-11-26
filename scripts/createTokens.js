@@ -7,13 +7,32 @@ const {
   PrivateKey
 } = require("@hashgraph/sdk");
 const fs = require("fs");
+const path = require("path");
+const dotenv = require("dotenv");
 
-// Load environment variables
-require('dotenv').config();
+// Prefer scripts/.env; fallback to default .env if scripts/.env not present
+const scriptsEnvPath = path.join(__dirname, ".env");
+if (fs.existsSync(scriptsEnvPath)) {
+  dotenv.config({ path: scriptsEnvPath });
+} else {
+  dotenv.config();
+}
 
 // Your account details from environment variables
 const operatorId = process.env.HEDERA_OPERATOR_ID;
-const operatorKey = PrivateKey.fromStringECDSA(process.env.HEDERA_OPERATOR_KEY);
+const operatorKeyRaw = process.env.HEDERA_OPERATOR_KEY;
+
+if (!operatorId || !operatorKeyRaw) {
+  console.error(
+    "❌ Missing environment variables. Please set:\n" +
+      "HEDERA_OPERATOR_ID=0.0.YOUR_ACCOUNT\n" +
+      "HEDERA_OPERATOR_KEY=YOUR_PRIVATE_KEY\n" +
+      "You can place them in scripts/.env or project .env"
+  );
+  process.exit(1);
+}
+
+const operatorKey = PrivateKey.fromStringECDSA(operatorKeyRaw);
 
 async function createTokens() {
   console.log("🪙 Starting token creation...");
@@ -56,6 +75,7 @@ async function createTokens() {
       .setTreasuryAccountId(operatorId)      // You own the NFTs
       .setAdminKey(operatorKey)              // You can manage NFTs
       .setSupplyKey(operatorKey)             // You can mint new NFTs
+      .setMetadataKey(operatorKey)           // You can set NFT metadata
       .setMaxTransactionFee(new Hbar(30));   // Max fee willing to pay
 
     const badgeNFTSubmit = await badgeNFTTx.execute(client);
@@ -65,14 +85,35 @@ async function createTokens() {
     console.log(`✅ Badge NFT created: ${badgeNFTId}`);
     console.log(`🔗 View on Hashscan: https://hashscan.io/testnet/token/${badgeNFTId}`);
 
-    // STEP 3: Update environment file
-    console.log("📝 Updating .env.local with token IDs...");
-
-    const envPath = '../Frontend/.env.local';
-    let envContent = fs.readFileSync(envPath, 'utf8');
-    envContent = envContent.replace('NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=0.0.TOKEN_ID', `NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=${questCoinId}`);
-    envContent = envContent.replace('NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=0.0.NFT_TOKEN_ID', `NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=${badgeNFTId}`);
-    fs.writeFileSync(envPath, envContent);
+    // STEP 3: Update environment file (opt-in)
+    if (process.env.WRITE_FRONTEND_ENV === 'true') {
+      console.log("📝 Updating frontend .env.local with token IDs (opt-in)...");
+      const candidateEnvPaths = [
+        path.join(__dirname, "..", "frontend", ".env.local"),
+        path.join(__dirname, "..", "Frontend", ".env.local"),
+      ];
+      const targetEnvPath = candidateEnvPaths.find((p) => fs.existsSync(p));
+      if (targetEnvPath) {
+        let envContent = fs.existsSync(targetEnvPath)
+          ? fs.readFileSync(targetEnvPath, "utf8")
+          : "";
+        const lines = envContent.split(/\r?\n/).filter(Boolean);
+        const filtered = lines.filter(
+          (l) =>
+            !l.startsWith("NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=") &&
+            !l.startsWith("NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=")
+        );
+        filtered.push(`NEXT_PUBLIC_QUESTCOIN_TOKEN_ID=${questCoinId}`);
+        filtered.push(`NEXT_PUBLIC_BADGE_NFT_TOKEN_ID=${badgeNFTId}`);
+        const newContent = filtered.join("\n") + "\n";
+        fs.writeFileSync(targetEnvPath, newContent);
+        console.log("✅ Frontend env updated at:", targetEnvPath);
+      } else {
+        console.log("ℹ️ Skipped updating frontend env: .env.local not found.");
+      }
+    } else {
+      console.log("ℹ️ Skipped updating frontend env (set WRITE_FRONTEND_ENV=true to enable).");
+    }
 
     console.log("✅ Environment updated!");
     console.log("");

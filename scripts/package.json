@@ -9,6 +9,7 @@
     "deploy-all": "npm run create-tokens && npm run create-hcs"
   },
   "dependencies": {
-    "@hashgraph/sdk": "^2.64.5"
+    "@hashgraph/sdk": "^2.64.5",
+    "dotenv": "^17.2.3"
   }
 }

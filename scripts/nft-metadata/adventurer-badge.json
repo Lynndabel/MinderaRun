@@ -1,0 +1,19 @@
+{
+  "name": "Adventurer Badge",
+  "description": "Awarded to skilled adventurers who conquered Stage 2 of Mindora Runner",
+  "image": "https://orange-geographical-marsupial-110.mypinata.cloud/ipfs/bafkreihqx2cuolkk6wkzjsn632734ajlqt7vgsiy2nxzb2ugq76f3bwrh4",
+  "attributes": [
+    {
+      "trait_type": "Stage",
+      "value": "2"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Intermediate"
+    },
+    {
+      "trait_type": "Reward",
+      "value": "50 QuestCoins"
+    }
+  ]
+}

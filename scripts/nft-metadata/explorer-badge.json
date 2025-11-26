@@ -1,0 +1,19 @@
+{
+  "name": "Explorer Badge",
+  "description": "Awarded to brave explorers who completed Stage 1 of Mindora Runner",
+  "image": "https://orange-geographical-marsupial-110.mypinata.cloud/ipfs/bafkreia7hw6k7blhn7stmrm46arjyxktcqwkoexyaydzdib3dghy6zqyu4",
+  "attributes": [
+    {
+      "trait_type": "Stage",
+      "value": "1"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Beginner"
+    },
+    {
+      "trait_type": "Reward",
+      "value": "20 QuestCoins"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Master Badge",
+  "description": "Awarded to elite masters who triumphed over Stage 3 of Mindora Runner",
+  "image": "https://orange-geographical-marsupial-110.mypinata.cloud/ipfs/bafybeibntv4534v2mis4cyyj6owmcnjzjpfswohvtlmta6rzzfjvprekja",
+  "attributes": [
+    {
+      "trait_type": "Stage",
+      "value": "3"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Expert"
+    },
+    {
+      "trait_type": "Reward",
+      "value": "100 QuestCoins"
+    }
+  ]
+}
