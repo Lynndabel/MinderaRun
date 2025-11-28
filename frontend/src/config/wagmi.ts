@@ -69,7 +69,9 @@ export const wagmiAdapter = new WagmiAdapter({
   }),
   ssr: true,
   projectId,
-  networks
+  networks,
+  // Enable autoConnect so sessions persist and reconnect on reload
+  autoConnect: true
 })
 
 export const config = wagmiAdapter.wagmiConfig

@@ -1,18 +1,25 @@
 'use client';
 
 import { useAppKit } from '@reown/appkit/react';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
 import { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import { networks } from '@/config/wagmi';
 
 export function NewWalletConnection() {
   const { open } = useAppKit();
   const { address, isConnected, isConnecting } = useAccount();
   const { disconnect } = useDisconnect();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
   const [showRegistration, setShowRegistration] = useState(false);
   const [username, setUsername] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [registrationStatus, setRegistrationStatus] = useState<'idle' | 'pending' | 'waiting' | 'success'>('idle');
+
+  // Target Hedera chain from config
+  const targetChain = networks[0];
+  const isNetworkMismatch = isConnected && chainId !== targetChain.id;
 
   const {
     setConnected,
@@ -80,6 +87,14 @@ export function NewWalletConnection() {
     setShowRegistration(false);
   };
 
+  const handleSwitchNetwork = () => {
+    try {
+      switchChain({ chainId: targetChain.id });
+    } catch (e) {
+      console.error('Failed to switch network', e);
+    }
+  };
+
   const handleRegister = async () => {
     if (!username.trim()) return;
 
@@ -117,6 +132,23 @@ export function NewWalletConnection() {
 
   return (
     <>
+
+      {/* Network Mismatch Prompt */}
+      {isNetworkMismatch && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[1000000]">
+          <div className="nes-container is-error pixel-art" style={{ backgroundColor: 'white' }}>
+            <p className="pixel-font text-xs text-gray-800 mb-2">⚠️ Wrong network detected</p>
+            <p className="pixel-font text-xs text-gray-700 mb-3">Please switch to {targetChain.name}.</p>
+            <button
+              onClick={handleSwitchNetwork}
+              className={`nes-btn is-warning pixel-font text-xs ${isSwitching ? 'is-disabled' : ''}`}
+              disabled={isSwitching}
+            >
+              {isSwitching ? 'SWITCHING...' : `SWITCH TO ${targetChain.name.toUpperCase()}`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Wallet Connection UI - changes based on connection status */}
       {isConnected && address ? (
