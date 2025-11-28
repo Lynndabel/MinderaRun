@@ -464,7 +464,7 @@ export function SimpleGameCanvas() {
         const newState = { ...prev };
 
         // Frame delta factor (1 ~= 60fps)
-        const last = lastTimeRef.current ?? time;
+        const last = lastTimeRef.current ?? (time - 16.6667);
         const deltaMs = time - last;
         lastTimeRef.current = time;
         const factor = Math.min(2, Math.max(0.5, deltaMs / 16.6667));
@@ -1031,10 +1031,10 @@ export function SimpleGameCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const handleTouchOrClick = (e: TouchEvent | MouseEvent) => {
+    const handlePointer = (e: PointerEvent) => {
       if (gameState.isGrounded && isPlaying) {
-        e.preventDefault(); // Prevent default touch behavior
-        playSound('jump'); // 🔊 Jump sound
+        e.preventDefault();
+        playSound('jump');
         setGameState(prev => ({
           ...prev,
           playerVelocityY: -18,
@@ -1043,13 +1043,10 @@ export function SimpleGameCanvas() {
       }
     };
 
-    // Add both touch and click events for maximum compatibility
-    canvas.addEventListener('touchstart', handleTouchOrClick);
-    canvas.addEventListener('click', handleTouchOrClick);
+    canvas.addEventListener('pointerdown', handlePointer, { passive: false });
     
     return () => {
-      canvas.removeEventListener('touchstart', handleTouchOrClick);
-      canvas.removeEventListener('click', handleTouchOrClick);
+      canvas.removeEventListener('pointerdown', handlePointer as any);
     };
   }, [gameState.isGrounded, isPlaying]);
 
@@ -1068,7 +1065,7 @@ export function SimpleGameCanvas() {
   }, [isPlaying]);
 
   return (
-    <div className="flex justify-center items-center min-h-[400px] md:min-h-[600px] relative z-10 w-full px-2 sm:px-4">
+    <div className="flex justify-center items-center min-h-[400px] md:min-h-[600px] relative z-10 w-full px-2 sm:px-4" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       <div className="relative w-full max-w-[1200px] md:max-w-[1400px] lg:max-w-[1600px]">
         <canvas
           ref={canvasRef}
@@ -1079,8 +1076,12 @@ export function SimpleGameCanvas() {
             background: 'linear-gradient(to bottom, #87CEEB, #98FB98)',
             imageRendering: 'pixelated',
             maxWidth: '100%',
-            height: 'auto'
+            height: 'auto',
+            touchAction: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none'
           }}
+          onContextMenu={(e) => { e.preventDefault(); return false; }}
         />
 
         {/* Game Overlay UI */}
