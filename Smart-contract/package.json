@@ -1,0 +1,36 @@
+{
+  "name": "mindera-runner-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Mindera Runner game on Hedera",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "test:integration": "hardhat test test/integration/"
+  },
+  "keywords": [
+    "hedera",
+    "blockchain",
+    "game",
+    "nft"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.2.2",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@openzeppelin/contracts": "^4.9.0",
+    "@openzeppelin/test-helpers": "^0.5.16",
+    "chai": "^4.3.7",
+    "dotenv": "^16.3.1",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.13.0",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.38.0"
+  }
+}
