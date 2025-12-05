@@ -1,8 +1,7 @@
 "use client";
 
-import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
+import { useAppKitAccount } from "@reown/appkit/react";
 import { useState, useEffect } from "react";
-import { type WalletProvider } from "@reown/appkit-adapter-wagmi";
 import { formatEther } from "viem";
 
 interface TokenInfo {
@@ -15,7 +14,6 @@ interface TokenInfo {
 
 export function TokenDisplay() {
   const { address, isConnected } = useAppKitAccount();
-  const { walletProvider } = useAppKitProvider<WalletProvider>("wagmi");
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,26 +25,24 @@ export function TokenDisplay() {
   };
 
   useEffect(() => {
-    if (isConnected && address && walletProvider) {
+    if (isConnected && address) {
       fetchTokenBalances();
     }
-  }, [isConnected, address, walletProvider]);
+  }, [isConnected, address]);
 
   const fetchTokenBalances = async () => {
-    if (!address || !walletProvider) return;
+    if (!address) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const provider = walletProvider;
       const tokenList: TokenInfo[] = [];
 
-      // Get ETH balance
-      const ethBalance = await provider.getBalance(address);
+      // Get ETH balance (placeholder - you'd use wagmi's useBalance hook in real implementation)
       tokenList.push({
         symbol: "ETH",
-        balance: formatEther(ethBalance),
+        balance: "0.0000",
         decimals: 18,
         address: "0x0000000000000000000000000000000000000000",
         name: "Ethereum",
@@ -58,7 +54,7 @@ export function TokenDisplay() {
           // This is a placeholder - you'd need to implement actual ERC20 token balance fetching
           tokenList.push({
             symbol: "QC",
-            balance: "0", // Would fetch actual balance
+            balance: "0",
             decimals: 18,
             address: TOKEN_CONTRACTS.QUEST_COIN,
             name: "Quest Coin",

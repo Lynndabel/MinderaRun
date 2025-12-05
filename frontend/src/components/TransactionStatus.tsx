@@ -36,8 +36,8 @@ export function TransactionStatus({
 
   if (!isVisible) return null;
 
-  const getExplorerUrl = () => {
-    if (!txHash) return null;
+  const getExplorerUrl = (): string | undefined => {
+    if (!txHash) return undefined;
     const network = process.env.NEXT_PUBLIC_HEDERA_NETWORK || 'testnet';
     return `https://hashscan.io/${network}/transaction/${txHash}`;
   };
